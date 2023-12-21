@@ -16,9 +16,9 @@ if (params.aligner == "bwa-mem"){
 }
 
 include { compareBams } from '../../local/process/compareBams'
-include { samtoolsSort as samtoolsSort } from '../../common/process/samtools/samtoolsSort'
+include { samtoolsSort } from '../../common/process/samtools/samtoolsSort'
 include { samtoolsSort as samtoolsSortSpike } from '../../common/process/samtools/samtoolsSort'
-include { samtoolsIndex as samtoolsIndex } from '../../common/process/samtools/samtoolsIndex'
+include { samtoolsIndex } from '../../common/process/samtools/samtoolsIndex'
 include { samtoolsIndex as samtoolsIndexSpike } from '../../common/process/samtools/samtoolsIndex'
 include { samtoolsFlagstat } from '../../common/process/samtools/samtoolsFlagstat'
 
@@ -63,7 +63,11 @@ workflow mappingFlow {
     }
 
     // Compare reference/spike mapping
-    compareBams(mapping.out.bam.join(mappingSpike.out.bam), params.genome, params.spike)
+    compareBams(
+      mapping.out.bam.join(mappingSpike.out.bam), 
+      params.genome, 
+      params.spike
+    )
     chBam = compareBams.out.refBam
     chSpikeBam = compareBams.out.spikeBam
     chCompareBamsMqc = compareBams.out.mqc

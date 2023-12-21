@@ -271,7 +271,11 @@ workflow {
     chVersions = chVersions.mix(mappingFlow.out.versions)
 
     // Remove low mapping rate for spikes
-    chCompareBamsMqc.join(chAlignedSpikeBam)
+    chCompareBamsMqc
+      .map{ meta, logs ->
+        def newMeta = [ id: meta.id, name: meta.name, singleEnd: meta.singleEnd, genome: params.spike ] 
+        [newMeta, logs]
+      }.join(chAlignedSpikeBam)
       .filter { meta, logs, bam, bai -> checkSpikeAlignmentPercent(meta, logs, params.spikePercentFilter) }
       .map { meta, logs, bam, bai -> [ meta, bam, bai ] }
       .set { chPassedSpikeBam }
