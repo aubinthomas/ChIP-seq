@@ -119,9 +119,10 @@ geniac_artifacts:
   script:
     - echo "Geniac recipes & configs"
     - geniac --version
-    - rm -rf ../geniac_init/ # remove possibly already existing folder
-    - geniac init -w  ../geniac_init/ ${CI_PROJECT_DIR}
-    - cd ../geniac_init/
+    - mkdir -p ${DIR_TMP_GENIAC_INIT}
+    - rm -rf ${DIR_TMP_GENIAC_INIT} # remove possibly already existing folder
+    - geniac init -w  ${DIR_TMP_GENIAC_INIT} ${CI_PROJECT_DIR}
+    - cd ${DIR_TMP_GENIAC_INIT}
     - geniac recipes -v
     - geniac configs -v
     - mkdir geniac-artifacts
@@ -132,6 +133,8 @@ geniac_artifacts:
       - geniac-artifacts.tar
   rules:
     - if: '$IS_NF_CORE == ""'
+  variables:
+    DIR_TMP_GENIAC_INIT: " ${CI_BUILDS_DIR}/${CI_PROJECT_PATH_SLUG}/${CI_COMMIT_REF_SLUG}/build_4_gitlab_geniac_init"
 
 
 #########################################################
