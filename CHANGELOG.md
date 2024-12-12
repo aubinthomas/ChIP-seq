@@ -1,4 +1,10 @@
 ***********************************
+versioon-2.1.0
+
+NEW FEATURES
+  - Export summit files from Macs2
+
+***********************************
 version-2.0.0
 
 NEW FEATURES
