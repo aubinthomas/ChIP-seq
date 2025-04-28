@@ -2,7 +2,6 @@ name: r
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - conda-forge::r-base=4.2.1=ha8c3e7c_1
   - bioconda::bioconductor-deseq2=1.38.0=r42hc247a5b_0
