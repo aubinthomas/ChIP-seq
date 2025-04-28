@@ -2,7 +2,6 @@ name: compbam
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - conda-forge::python=3.9.15=h47a2c10_0_cpython
   - bioconda::samtools=1.15.1=h6899075_1
