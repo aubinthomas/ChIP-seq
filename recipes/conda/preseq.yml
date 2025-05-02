@@ -2,6 +2,7 @@ name: preseq
 channels:
   - conda-forge
   - bioconda
+  - nodefaults
 dependencies:
   - bioconda::preseq=3.2.0=h867801b_3
 
