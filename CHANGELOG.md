@@ -3,6 +3,7 @@ versioon-2.1.0
 
 NEW FEATURES
   - Export summit files from Macs2
+  - Update T2T genome annotation
 
 ***********************************
 version-2.0.0

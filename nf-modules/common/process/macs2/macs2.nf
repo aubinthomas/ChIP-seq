@@ -16,7 +16,7 @@ process macs2{
   output:
   path("*.xls"), emit: outputXls
   tuple val(meta), path("*.{narrowPeak,broadPeak}"), emit: peaks
-  tuple val(meta), path("*summits.bed"), emit: summit
+  tuple val(meta), path("*summits.bed"), emit: summit, optional: true
   path("*_mqc.tsv"), emit: mqc
   path("versions.txt"), emit: versions
 

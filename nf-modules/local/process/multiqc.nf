@@ -7,7 +7,7 @@
 process multiqc {
   label 'multiqc'
   label 'minCpu'
-  label 'minMem'
+  label 'lowMem'
 
   input:
   val customRunName
