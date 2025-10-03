@@ -1,3 +1,8 @@
+version-2.0.1
+
+NEW FEATURES
+   - Add bosTau9 genome annotation
+
 ***********************************
 version-2.0.0
 
