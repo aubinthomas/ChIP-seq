@@ -279,3 +279,5 @@ custom_plot_config:
          color: '#A6ACAF'
 
 plots_force_interactive: True
+
+sort_samples: True
