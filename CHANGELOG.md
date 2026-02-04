@@ -1,14 +1,13 @@
-version-2.0.1
-
-NEW FEATURES
-   - Add bosTau9 genome annotation
 
 ***********************************
-versioon-2.1.0
+version-2.1.0
 
 NEW FEATURES
+  - Add bosTau9 genome annotation
   - Export summit files from Macs2
   - Update T2T genome annotation
+  - Remove the defaults channel in conda recipes (#73)
+  - Update matplotlib version in deeptools (#70)
 
 ***********************************
 version-2.0.0
