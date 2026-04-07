@@ -15,6 +15,7 @@ workflow bamFilteringFlow {
     main:
     chVersions = Channel.empty()
 
+
     // Remove duplicates
     markDuplicates(
       bams

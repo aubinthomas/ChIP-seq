@@ -33,5 +33,3 @@ process bowtie2{
           $inputOpts > ${prefix}.bam 2> ${prefix}_bowtie2.log
   """
 }
-
-

@@ -4,5 +4,5 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - conda-forge::python=3.7.10=hffdb5ce_100_cpython
-  - conda-forge::pymdown-extensions=7.1=pyh9f0ad1d_0
+  - conda-forge::python
+  - conda-forge::pymdown-extensions

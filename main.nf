@@ -42,6 +42,8 @@ include {loadDesign} from './lib/functions'
 ===================================
 */
 
+params.orspike = true
+
 if (!params.genome){
   exit 1, "No genome provided. The --genome option is mandatory"
 }
@@ -189,12 +191,18 @@ chDesignControl = params.design ? loadDesign(params.design) : Channel.empty()
 
 // Workflows
 include { prepareAnnotationFlow } from './nf-modules/local/subworkflow/prepareAnnotation'
+
+include { mappingFlow2 as mappingFlowOR } from './nf-modules/local/subworkflow/mappingOR'
 include { mappingFlow } from './nf-modules/local/subworkflow/mapping'
+
 include { loadBamFlow } from './nf-modules/local/subworkflow/loadBam'
 include { bamFilteringFlow as bamFilteringFlow } from './nf-modules/local/subworkflow/bamFiltering'
 include { bamFilteringFlow as bamFilteringFlowSpike } from './nf-modules/local/subworkflow/bamFiltering'
 include { bamChipFlow }      from './nf-modules/local/subworkflow/bamChip'
-include { bamSpikesFlow }    from './nf-modules/local/subworkflow/bamSpikes'
+include { bamSpikesORflow as bamSpikesORflow } from './nf-modules/local/subworkflow/bamSpikesOR'
+include { bamSpikesFlow as bamSpikesFlow }    from './nf-modules/local/subworkflow/bamSpikes'
+
+
 include { peakCallingFlow }  from './nf-modules/local/subworkflow/peakcalling'
 
 // Processes
@@ -207,7 +215,7 @@ include { samtoolsIndex }       from './nf-modules/common/process/samtools/samto
 include { getSoftwareVersions } from './nf-modules/common/process/utils/getSoftwareVersions'
 include { outputDocumentation } from './nf-modules/common/process/utils/outputDocumentation'
 include { multiqc }             from './nf-modules/local/process/multiqc'
-
+include { APPLY_CALIBRATION } from './nf-modules/local/process/applyCalibration'
 
 workflow {
   chVersions = Channel.empty()
@@ -256,25 +264,43 @@ workflow {
   //*******************************************
   // MAPPING
 
+
   if (!params.bam){
-    mappingFlow(
-      chRawReads,
-      chMappingIndex.collect(),
-      chSpikeIndex,
-    )
-    chAlignedBam = mappingFlow.out.bam
-    chAlignedBamMqc = mappingFlow.out.logs
-    chAlignedFlagstat = mappingFlow.out.flagstat
-    chAlignedSpikeBam = mappingFlow.out.spikeBam
-    chCompareBamsMqc = mappingFlow.out.compareBamsMqc
-    chVersions = chVersions.mix(mappingFlow.out.versions)
+    if (params.spike && params.orspike) {
+        mappingFlowOR( chRawReads, chMappingIndex.collect(), chSpikeIndex )
+        chAlignedBam = mappingFlowOR.out.bam
+        chAlignedBamMqc = mappingFlowOR.out.logs
+        chAlignedFlagstat = mappingFlowOR.out.flagstat
+        chAlignedSpikeBam = mappingFlowOR.out.spikeBam
+        chVersions = chVersions.mix(mappingFlowOR.out.versions)
+        chCompareBamsMqc = Channel.empty()
+        
+        // CORRECTION : Pas de compareBams ici,  passe directement le BAM 
+        chPassedSpikeBam = chAlignedSpikeBam
 
-    // Remove low mapping rate for spikes
-    chCompareBamsMqc.join(chAlignedSpikeBam)
-      .filter { meta, logs, bam, bai -> checkSpikeAlignmentPercent(meta, logs, params.spikePercentFilter) }
-      .map { meta, logs, bam, bai -> [ meta, bam, bai ] }
-      .set { chPassedSpikeBam }
+    } else {
+        mappingFlow( chRawReads, chMappingIndex.collect(), chSpikeIndex )
+        chAlignedBam = mappingFlow.out.bam
+        chAlignedBamMqc = mappingFlow.out.logs
+        chAlignedFlagstat = mappingFlow.out.flagstat
+        chAlignedSpikeBam = mappingFlow.out.spikeBam
+        chCompareBamsMqc = mappingFlow.out.compareBamsMqc
+        chVersions = chVersions.mix(mappingFlow.out.versions)
 
+        // LE FILTRE RESTE ICI, SEULEMENT POUR LE WORKFLOW STANDARD
+        chCompareBamsMqc
+            .map { meta, logs -> [ meta.id, logs ] }
+            .join(
+              chAlignedSpikeBam
+                .map { meta, bam, bai -> [ meta.id, meta, bam, bai ] }
+            )
+            .filter { id, logs, meta, bam, bai -> 
+                checkSpikeAlignmentPercent(meta, logs, params.spikePercentFilter) 
+            }
+            .map { id, logs, meta, bam, bai -> [ meta, bam, bai ] }
+            .set { chPassedSpikeBam }
+    }
+      
   }else{
  
     loadBamFlow(
@@ -301,6 +327,7 @@ workflow {
     chVersions = chVersions.mix(preseq.out.versions)
   }
 
+
   bamFilteringFlow(
     chAlignedBam
   )
@@ -320,21 +347,35 @@ workflow {
   if (params.spike){
 
     bamFilteringFlowSpike(
-      chPassedSpikeBam
+      chPassedSpikeBam.view{ "DEBUG : input spike bam for filtering : ${it[0].id}" }
     )
     chVersions = chVersions.mix(bamFilteringFlowSpike.out.versions)
    
-    bamSpikesFlow(
-      bamFilteringFlow.out.bam,
-      bamFilteringFlowSpike.out.bam,
-      chBlacklist,
-      chEffGenomeSize
-    )
-    chVersions = chVersions.mix(bamSpikesFlow.out.versions)
+
+    if(params.orspike){
+       bamSpikesORflow(
+         bamFilteringFlow.out.bam,      // BAMs Référence filtrés
+         bamFilteringFlowSpike.out.bam, // BAMs Spike filtrés
+         chDesignControl,               // Paires IP/Input
+         chBlacklist,
+         chEffGenomeSize
+       )
+       chVersions = chVersions.mix(bamSpikesORflow.out.versions)
+    }
+    else{
+        bamSpikesFlow(
+          bamFilteringFlow.out.bam,
+          bamFilteringFlowSpike.out.bam,
+          chBlacklist,
+          chEffGenomeSize
+        )
+        chVersions = chVersions.mix(bamSpikesFlow.out.versions)
+    }
+
   }
 
-  //*********************************************
-  // DOWNSTREAM ANALYSIS (DESIGN IS MANDATORY !)
+  // //*********************************************
+  // // DOWNSTREAM ANALYSIS (DESIGN IS MANDATORY !)
  
   if (params.design && !params.skipPeakCalling){
 

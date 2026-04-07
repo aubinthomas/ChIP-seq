@@ -4,5 +4,5 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - bioconda::subread=2.0.1=h5bf99c6_1
+  - bioconda::subread
 

@@ -30,6 +30,13 @@ workflow mappingFlow {
   indexSpike
 
   main:
+
+  // println "Entering in mappingFlow subworkflow"
+  // reads.view()
+  // indexRef.view()
+  // indexSpike.view()
+
+
   chVersions = Channel.empty()
   
   // Align on reference genome
