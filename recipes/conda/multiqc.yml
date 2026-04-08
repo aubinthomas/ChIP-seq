@@ -1,8 +1,9 @@
 name: multiqc
 channels:
-  - defaults
   - conda-forge
   - bioconda
+  - defaults
 dependencies:
+  - python=3.9
   - bioconda::multiqc=1.11=pyhdfd78af_0
-
+  - setuptools

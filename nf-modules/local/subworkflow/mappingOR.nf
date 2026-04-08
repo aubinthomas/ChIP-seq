@@ -21,6 +21,24 @@ include { samtoolsIndex as samtoolsIndex } from '../../common/process/samtools/s
 include { samtoolsIndex as samtoolsIndexSpike } from '../../common/process/samtools/samtoolsIndex'
 include { samtoolsFlagstat } from '../../common/process/samtools/samtoolsFlagstat'
 
+process CLEAN_REF_OUTPUTS {
+    tag "$meta.id"
+    executor 'local'
+
+    input:
+    tuple val(meta), path(bam), path(bai), path(flagstat)
+
+    output:
+    tuple val(meta), path("${meta.id}_${params.genome}.bam"), path("*.bai"), emit: bam
+    tuple val(meta), path("${meta.id}_${params.genome}.flagstats"), emit: flagstat
+
+    script:
+    """
+    mv $bam ${meta.id}_${params.genome}.bam
+    mv $bai ${meta.id}_${params.genome}.bam.bai
+    mv $flagstat ${meta.id}_${params.genome}.flagstats
+    """
+}
 
 process FIX_BAM_PREFIX {
     tag "$meta.id"
@@ -35,6 +53,23 @@ process FIX_BAM_PREFIX {
     script:
     """
     mv $bam ${meta.id}_${params.genome}.bam
+    """
+}
+
+process FIX_FLAGSTAT_NAME {
+    tag "$meta.id"
+    executor 'local'
+
+    input:
+    tuple val(meta), path(flagstat)
+
+    output:
+    tuple val(meta), path("${meta.id}_${params.genome}.flagstats"), emit: stats
+
+    script:
+    """
+    # On renomme le fichier pour retirer tout suffixe parasite (comme .sorted)
+    mv $flagstat ${meta.id}_${params.genome}.flagstats
     """
 }
 
@@ -81,15 +116,27 @@ workflow mappingFlow2 {
 
   // Dans la stratégie de soustraction, la comparaison est implicite (filtre au niveau FASTQ).
   // compareBams n'est pas compatible ici car les sets de lectures sont asymétriques.
-  // chBam = mapping.out.bam
-  FIX_BAM_PREFIX(mapping.out.bam)
-  chBam = FIX_BAM_PREFIX.out.bam
-  chSpikeBam = mappingSpike.out.bam
+  chBam = mapping.out.bam
+  chSpikeBam = mappingSpike.out.bam  // FIX_BAM_PREFIX(mapping.out.bam)
+  // chBam = FIX_BAM_PREFIX.out.bam
+  // chSpikeBam = mappingSpike.out.bam
 
   // Post-processing Reference BAMs
   samtoolsSort(chBam)
   samtoolsIndex(samtoolsSort.out.bam)
   samtoolsFlagstat(samtoolsSort.out.bam)
+  // samtoolsSort(chBam)
+  // samtoolsIndex(samtoolsSort.out.bam)
+
+  // samtoolsFlagstat(samtoolsSort.out.bam)
+  // FIX_FLAGSTAT_NAME(samtoolsFlagstat.out.stats)
+
+  ch_to_clean = samtoolsSort.out.bam
+    .join(samtoolsIndex.out.bai)
+    .join(samtoolsFlagstat.out.stats)
+  CLEAN_REF_OUTPUTS(ch_to_clean)
+  
+  //chVersions = chVersions.mix(samtoolsSort.out.versions, samtoolsIndex.out.versions, samtoolsFlagstat.out.versions)
   chVersions = chVersions.mix(samtoolsSort.out.versions, samtoolsIndex.out.versions, samtoolsFlagstat.out.versions)
 
   // Post-processing Spike BAMs
@@ -97,9 +144,13 @@ workflow mappingFlow2 {
   samtoolsIndexSpike(samtoolsSortSpike.out.bam)
 
   emit:
-  bam      = samtoolsSort.out.bam.join(samtoolsIndex.out.bai)
+  // bam      = samtoolsSort.out.bam.join(samtoolsIndex.out.bai)
+  // logs     = mapping.out.logs
+  // flagstat = FIX_FLAGSTAT_NAME.out.stats
+  bam      = CLEAN_REF_OUTPUTS.out.bam
   logs     = mapping.out.logs
-  flagstat = samtoolsFlagstat.out.stats
+  flagstat = CLEAN_REF_OUTPUTS.out.flagstat
+  
   spikeBam = samtoolsSortSpike.out.bam.join(samtoolsIndexSpike.out.bai)
   spikeLogs = mappingSpike.out.logs
   compareBamsMqc = Channel.empty()

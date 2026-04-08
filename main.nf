@@ -217,6 +217,24 @@ include { outputDocumentation } from './nf-modules/common/process/utils/outputDo
 include { multiqc }             from './nf-modules/local/process/multiqc'
 include { APPLY_CALIBRATION } from './nf-modules/local/process/applyCalibration'
 
+
+process FORCE_FLAGSTAT_NAME {
+    tag "$meta.id"
+    executor 'local'
+
+    input:
+    tuple val(meta), path(flagstat)
+
+    output:
+    tuple val(meta), path("${meta.id}_${params.genome}_filtered.flagstats")
+
+    script:
+    """
+    cp ${flagstat} ${meta.id}_${params.genome}_filtered.flagstats
+    """
+}
+
+
 workflow {
   chVersions = Channel.empty()
 
@@ -333,6 +351,11 @@ workflow {
   )
   chVersions = chVersions.mix(bamFilteringFlow.out.versions)
 
+  // give flagstat to process to rename it
+  FORCE_FLAGSTAT_NAME(bamFilteringFlow.out.flagstat)
+  chFilteredFlagstatMqc = FORCE_FLAGSTAT_NAME.out
+
+
   bamChipFlow(
     bamFilteringFlow.out.bam,
     chBlacklist,
@@ -443,7 +466,7 @@ workflow {
       chCompareBamsMqc.map{it->it[1]}.collect().ifEmpty([]),
       chAlignedFlagstat.map{it->it[1]}.collect().ifEmpty([]),
       bamFilteringFlow.out.markdupMetrics.collect().ifEmpty([]),
-      bamFilteringFlow.out.flagstat.map{it->it[1]}.collect().ifEmpty([]),
+      chFilteredFlagstatMqc.map{it->it[1]}.collect().ifEmpty([]),
       chPreseqMqc.collect().ifEmpty([]),
       bamChipFlow.out.fragmentsSize.collect().ifEmpty([]),
       bamChipFlow.out.ppqtOutMqc.collect().ifEmpty([]), 
