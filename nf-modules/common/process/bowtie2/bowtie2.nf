@@ -29,9 +29,8 @@ process bowtie2{
   echo \$(bowtie2 --version | awk 'NR==1{print "bowtie2 "\$3}') > versions.txt
   bowtie2 -p ${task.cpus} \
           ${args} \
+          --rg-id ${prefix} --rg SM:${prefix} --rg PL:ILLUMINA \
            -x \${localIndex} \
           $inputOpts > ${prefix}.bam 2> ${prefix}_bowtie2.log
   """
 }
-
-

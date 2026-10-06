@@ -127,7 +127,7 @@ do
 	output+=",${nb_mapped},${perc_mapped},${nb_filter},${perc_filter}"
     else
 	nb_mapped=$(grep "primary mapped (" mapping/${sample}_${genome}.flagstats | awk '{print $1}')
-	nb_filter=$(grep "primary mapped (" filtering/${sample}_${genome}_filtered.flagstats | awk '{print $1}')
+	nb_filter=$(grep "primary mapped (" filtering/${sample}_${genome}.flagstats | awk '{print $1}')
 	perc_mapped=$(echo "${nb_mapped} ${nb_reads}" | awk ' { printf "%.*f",2,$1*100/$2 } ')
 	perc_filter=$(echo "${nb_filter} ${nb_reads}" | awk ' { printf "%.*f",2,$1*100/$2 } ')
         header+=",Number_of_aligned_reads,Percent_of_aligned_reads,Number_reads_after_filt,Percent_reads_after_filt"
