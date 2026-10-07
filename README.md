@@ -78,6 +78,7 @@ INPUTS:
   --fragmentSize INTEGER   Estimated fragment length used to extend single-end reads
   --singleEnd              For single-end input data
   --spike        INTEGER   Name of the genome used for spike-in analysis
+  --orspike                Use the Occupancy Ratio (OR) spike-in normalization (requires --spike and --design)
   --tssSize      INTEGER   Distance (upstream/downstream) to transcription start point to consider
 									
 PREPROCESSING:

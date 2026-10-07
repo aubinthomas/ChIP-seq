@@ -8,7 +8,6 @@ process bowtie2Unaligned {
   label 'bowtie2'
   label 'highCpu'
   label 'highMem'
-  conda "bioconda::bowtie2=2.5.4 bioconda::samtools=1.21"
 
   input:
   tuple val(meta), path(reads)
@@ -23,7 +22,6 @@ process bowtie2Unaligned {
   when:
   task.ext.when == null || task.ext.when
 
-  script:
   script:
   def args = task.ext.args ?: ''
   def prefix = task.ext.prefix ?: "${meta.id}"

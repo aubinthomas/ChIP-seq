@@ -5,10 +5,10 @@
 // Ce process génère les statistiques et exporte correctement COUNT
 process SAMTOOLS_IDXSTATS_REF {
     tag "$meta.id"
-    label 'process_low'
+    label 'samtools'
+    label 'minCpu'
+    label 'lowMem'
 
-    publishDir "${params.outDir}/QC_spikes/Samtools", mode: 'copy'
-    
     input:
     tuple val(meta), path(bam), path(bai)
     
@@ -28,10 +28,10 @@ process SAMTOOLS_IDXSTATS_REF {
 // Process pour les BAMs Spike
 process SAMTOOLS_IDXSTATS_SPIKE {
     tag "$meta.id"
-    label 'process_low'
+    label 'samtools'
+    label 'minCpu'
+    label 'lowMem'
 
-    publishDir "${params.outDir}/QC_spikes/Samtools", mode: 'copy'
-    
     input:
     tuple val(meta), path(bam), path(bai)
     
@@ -51,9 +51,9 @@ process SAMTOOLS_IDXSTATS_SPIKE {
 // Ce process applique le facteur calculé
 process APPLY_CALIBRATION {
     tag "$meta.id"
-    label 'process_high'
-
-    publishDir "${params.outDir}/QC_spikes/Calibration", mode: 'copy'
+    label 'deeptools'
+    label 'medCpu'
+    label 'lowMem'
 
     input:
     tuple val(meta), path(bam), path(bai), val(scaleFactor)
@@ -88,9 +88,10 @@ process APPLY_CALIBRATION {
 // Il sauvegarde le facteur dans un fichier texte pour permettre la traçabilité des calculs.
 process CALCULATE_OR {
     tag "${metaIP.id}"
-    executor 'local'
+    label 'unix'
+    label 'minCpu'
+    label 'minMem'
     
-    publishDir "${params.outDir}/QC_spikes/OR_factors", mode: 'copy'
 
     input:
     // Ajout de refCtrl dans le tuple d'entrée
@@ -105,10 +106,10 @@ process CALCULATE_OR {
     # Calcul du facteur avec la formule de l'Occupancy Ratio
     export OR_FACTOR=\$(awk -v Wc="$spikeCtrl" -v IPc="$spikeIP" -v Wx="$refCtrl" 'BEGIN { 
         if (IPc == 0 || Wx == 0) { 
-            printf "0.0000000000" 
+            printf "0" 
         } else { 
             # Facteur = SpikeCtrl / (SpikeIP * RefCtrl)
-            printf "%.10f", Wc / (IPc * Wx) 
+            printf "%.6e", Wc / (IPc * Wx) 
         } 
     }')
     

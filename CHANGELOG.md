@@ -1,5 +1,15 @@
 
 ***********************************
+version-dev
+
+NEW FEATURES
+  - Add `--orspike` option for Occupancy Ratio (OR) spike-in normalization
+    (A. Thomas, S. Faidherbe - IGH, CNRS)
+    - Strict double subtraction of reference/spike cross-mapping reads (bwa-mem, bowtie2, STAR)
+    - OR scaling factor computed for each IP/control pair of the design
+    - Calibrated bigWig files in `bigWig/calibrated/`
+
+***********************************
 version-2.1.0
 
 NEW FEATURES

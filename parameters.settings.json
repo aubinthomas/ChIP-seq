@@ -103,6 +103,19 @@
       "arity": 0,
       "group": "Inputs"
     },
+    {
+      "name": "orspike",
+      "label": "OR spike-in normalization",
+      "usage": "Use the Occupancy Ratio (OR) spike-in normalization (requires --spike and --design)",
+      "type": "boolean",
+      "nargs": 0,
+      "choices": [],
+      "default_value": false,
+      "pattern": "",
+      "render": "check-box",
+      "arity": 0,
+      "group": "Inputs"
+    },
 
     {
       "name": "trimming",

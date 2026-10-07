@@ -41,7 +41,9 @@ include { samtoolsFlagstat } from '../../common/process/samtools/samtoolsFlagsta
 // NETTOIE TOUS LES NOMS AVANT L'EXPORT
 process CLEAN_REF_OUTPUTS {
     tag "$meta.id"
-    executor 'local'
+    label 'unix'
+    label 'minCpu'
+    label 'minMem'
 
     input:
     tuple val(meta), path(bam), path(bai), path(flagstat)

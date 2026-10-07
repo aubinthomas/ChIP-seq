@@ -8,7 +8,6 @@ process starAlignUnaligned {
   label 'star'
   label 'highCpu'
   label 'extraMem'
-  conda "bioconda::star=2.7.11b"
 
   input:
   tuple val(meta), path(reads)

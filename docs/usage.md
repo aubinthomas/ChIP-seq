@@ -14,6 +14,7 @@
 * [Reference genomes](#reference-genomes)
     * [`--genome`](#--genome)
     * [`--spike`](#--spike)
+    * [`--orspike`](#--orspike)
     * [`--genomeAnnotationPath`](#--genomeAnnotationPath)
 * [Alignment](#alignment)
     * [`--aligner`](#--aligner)
@@ -203,6 +204,28 @@ Note that in this case, the paths can be updated on command line using the follo
 - `--spikeStarIndex` - Path to STAR index
 - `--spikeBowtie2Index` - Path to HiSAT2 index
 - `--spikeBwaIndex` - Path to TopHat2 index
+
+### `--orspike`
+
+Use the Occupancy Ratio (OR) spike-in normalization instead of the default spike-in normalization (default: false).
+This option requires `--spike` and a `--design` file defining the IP/control pairs.
+
+```bash
+--spike 'sacCer3' --design 'design.csv' --orspike
+```
+
+With this option, ambiguous reads are removed by a strict double subtraction instead of the `compareBams` step:
+- reads are first aligned on the spike genome, and the unaligned reads are aligned on the reference genome to generate the reference BAM files,
+- reads are first aligned on the reference genome, and the unaligned reads are aligned on the spike genome to generate the spike BAM files.
+
+After filtering, the number of reads aligned on each genome is computed with `samtools idxstats`, and a scaling factor is calculated for each IP from its control:
+
+```
+factor = spikeControl / (spikeIP * refControl)
+```
+
+This factor is applied to the IP reference coverage with `bamCoverage --scaleFactor` to generate calibrated bigWig files (`bigWig/calibrated/`).
+The OR factors are exported in `QC_spikes/OR_factors/`.
 
 ### `--genomeAnnotationPath`
 

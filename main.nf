@@ -42,10 +42,12 @@ include {loadDesign} from './lib/functions'
 ===================================
 */
 
-params.orspike = true
-
 if (!params.genome){
   exit 1, "No genome provided. The --genome option is mandatory"
+}
+
+if (params.orspike && (!params.spike || !params.design)){
+  exit 1, "The --orspike option requires both --spike and --design options"
 }
 
 if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
@@ -215,7 +217,6 @@ include { samtoolsIndex }       from './nf-modules/common/process/samtools/samto
 include { getSoftwareVersions } from './nf-modules/common/process/utils/getSoftwareVersions'
 include { outputDocumentation } from './nf-modules/common/process/utils/outputDocumentation'
 include { multiqc }             from './nf-modules/local/process/multiqc'
-include { APPLY_CALIBRATION } from './nf-modules/local/process/applyCalibration'
 
 
 workflow {
@@ -351,7 +352,7 @@ workflow {
   if (params.spike){
 
     bamFilteringFlowSpike(
-      chPassedSpikeBam.view{ "DEBUG : input spike bam for filtering : ${it[0].id}" }
+      chPassedSpikeBam
     )
     chVersions = chVersions.mix(bamFilteringFlowSpike.out.versions)
    

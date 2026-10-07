@@ -8,7 +8,6 @@ process bwaMemUnaligned {
   label 'bwa'
   label 'highCpu'
   label 'highMem'
-  conda "bioconda::bwa=0.7.19 bioconda::samtools=1.21"
 
   input:
   tuple val(meta), path(reads)
